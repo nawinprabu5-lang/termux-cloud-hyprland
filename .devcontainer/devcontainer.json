@@ -1,35 +1,31 @@
 {
-  "name": "Arch Linux Hyprland Cloud Desktop",
+  "name": "Cloud Linux GUI Desktop",
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "remoteUser": "clouduser",
-  "forwardPorts": [5900, 6080, 4713],
+  "remoteUser": "vscode",
+  "forwardPorts": [5901, 6080, 4713],
   "portsAttributes": {
     "6080": {
-      "label": "noVNC Hyprland Web GUI",
-      "onAutoForward": "notify"
+      "label": "noVNC Cloud Web Desktop",
+      "onAutoForward": "openBrowser"
     },
-    "5900": {
-      "label": "WayVNC Native Stream (Termux:X11)",
+    "5901": {
+      "label": "TigerVNC Native Stream (Termux:X11)",
       "onAutoForward": "silent"
     },
     "4713": {
-      "label": "PulseAudio Network Sound",
+      "label": "PulseAudio Network Audio",
       "onAutoForward": "silent"
     }
   },
   "postCreateCommand": "bash scripts/install-configs.sh",
-  "postStartCommand": "bash scripts/start-cloud-desktop.sh",
+  "postStartCommand": "nohup bash scripts/start-cloud-desktop.sh > /tmp/start_desktop.log 2>&1 &",
   "customizations": {
     "vscode": {
       "settings": {
-        "terminal.integrated.defaultProfile.linux": "zsh"
-      },
-      "extensions": [
-        "ms-azuretools.vscode-docker",
-        "eamodio.gitlens"
-      ]
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
     }
   }
 }

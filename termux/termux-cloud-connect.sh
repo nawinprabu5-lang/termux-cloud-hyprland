@@ -1,12 +1,12 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ╔═══════════════════════════════════════════════════════════════════╗
-# ║  Termux Cloud Hyprland Connect — Android Client Bridge           ║
+# ║  Termux Cloud Desktop Connect — Android Client Bridge             ║
 # ╚═══════════════════════════════════════════════════════════════════╝
 
 set -e
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🌌 Termux Cloud Hyprland Desktop Bridge"
+echo "🖥️  Termux Cloud Desktop Bridge"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # 1. Check Dependencies
@@ -22,7 +22,7 @@ if [ -n "$MISSING_PKGS" ]; then
 fi
 
 # 2. Check Display Server (:0)
-echo "🖥️  [1/3] Initializing Termux:X11 Display..."
+echo "📱 [1/3] Initializing Termux:X11 Display..."
 export XDG_RUNTIME_DIR="${TMPDIR:-/data/data/com.termux/files/usr/tmp}"
 export DISPLAY=:0
 
@@ -53,25 +53,24 @@ if [ -z "$CODESPACE_NAME" ]; then
 fi
 
 if [ -n "$CODESPACE_NAME" ]; then
-    echo "🔗 Creating port forward tunnel to Codespace: $CODESPACE_NAME..."
-    # Kill any existing forwarded tunnel
-    pkill -f "gh cs ssh.*5900" 2>/dev/null || true
-    gh cs ssh -c "$CODESPACE_NAME" -- -N -L 5900:localhost:5900 -L 4713:localhost:4713 &
+    echo "🔗 Creating port forward tunnel (5901 & 4713) to: $CODESPACE_NAME..."
+    pkill -f "gh cs ssh.*5901" 2>/dev/null || true
+    gh cs ssh -c "$CODESPACE_NAME" -- -N -L 5901:localhost:5901 -L 4713:localhost:4713 &
     TUNNEL_PID=$!
     sleep 2
 else
-    echo "💡 No active Codespace detected. Using direct localhost:5900 (or custom SSH tunnel)."
+    echo "💡 Using direct localhost:5901 (or active port forward)."
 fi
 
-# 4. Stream Hyprland to Termux:X11
-echo "🚀 [3/3] Streaming Hyprland into Termux:X11..."
+# 4. Stream Cloud Desktop to Termux:X11
+echo "🚀 [3/3] Streaming Cloud Desktop into Termux:X11..."
 if command -v vncviewer >/dev/null 2>&1; then
     DISPLAY=:0 vncviewer \
         -FullScreen=1 \
         -ViewOnly=0 \
         -PreferredEncoding=ZRLE \
         -AutoPass=1 \
-        localhost:5900 || true
+        localhost:5901 || true
 else
     echo "⚠️  vncviewer not found. Please install tigervnc: pkg install tigervnc"
 fi
@@ -80,4 +79,4 @@ fi
 if [ -n "$TUNNEL_PID" ]; then
     kill "$TUNNEL_PID" 2>/dev/null || true
 fi
-echo "👋 Hyprland session closed."
+echo "👋 Cloud desktop session closed."

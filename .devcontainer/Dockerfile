@@ -1,84 +1,47 @@
-# Arch Linux Cloud Computer with Hyprland Desktop for GitHub Codespaces / Cloud VM
-FROM archlinux:latest
+# Ubuntu 22.04 Cloud Computer with Full GUI Desktop & GPU/CPU Acceleration
+FROM mcr.microsoft.com/devcontainers/base:ubuntu-22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV USER=clouduser
-ENV UID=1000
-ENV GID=1000
-ENV HOME=/home/clouduser
+ENV USER=vscode
+ENV DISPLAY=:1
 
-# Update keyrings, mirrors, and base packages
-RUN pacman -Syu --noconfirm --needed \
-    archlinux-keyring && \
-    pacman -S --noconfirm --needed \
-    base-devel \
-    git \
+# Install XFCE4, X11 utilities, TigerVNC, noVNC, PulseAudio, Firefox, and Tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    xfce4 \
+    xfce4-goodies \
+    xfce4-terminal \
+    dbus-x11 \
+    tigervnc-standalone-server \
+    tigervnc-common \
+    novnc \
+    websockify \
+    pulseaudio \
+    pulseaudio-utils \
+    pavucontrol \
+    firefox \
+    htop \
+    neofetch \
     curl \
     wget \
+    git \
     sudo \
-    zsh \
-    openssh \
-    htop \
-    fastfetch \
-    dbus \
+    net-tools \
     socat \
-    procps-ng \
-    net-tools
+    mesa-utils \
+    x11-xserver-utils \
+    fonts-jetbrains-mono \
+    fonts-noto-color-emoji \
+    fonts-font-awesome && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install Graphics, Wayland, and Hyprland Desktop Environment
-RUN pacman -S --noconfirm --needed \
-    mesa \
-    vulkan-swrast \
-    xorg-xwayland \
-    seatd \
-    hyprland \
-    waybar \
-    wofi \
-    kitty \
-    swaybg \
-    wayvnc \
-    novnc \
-    python-websockify \
-    grim \
-    slurp \
-    wl-clipboard \
-    pavucontrol \
-    pulseaudio \
-    pulseaudio-alsa \
-    firefox \
-    ttf-jetbrains-mono-nerd \
-    ttf-font-awesome \
-    noto-fonts \
-    noto-fonts-emoji \
-    noto-fonts-cjk \
-    xdg-utils \
-    xdg-user-dirs
+# Set up VNC passwordless and permissions
+RUN mkdir -p /home/vscode/.vnc /home/vscode/.config/xfce4 && \
+    chown -R vscode:vscode /home/vscode
 
-# Create non-root user with sudo access
-RUN groupadd -g $GID $USER 2>/dev/null || true && \
-    useradd -u $UID -g $GID -m -s /bin/zsh $USER && \
-    echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+USER vscode
+WORKDIR /home/vscode
 
-# Create runtime directories and set permissions
-RUN mkdir -p /tmp/runtime-clouduser /home/$USER/.config && \
-    chown -R $USER:$USER /home/$USER /tmp/runtime-clouduser && \
-    chmod 0700 /tmp/runtime-clouduser
+EXPOSE 5901 6080 4713 22
 
-# Environment variables for headless Wayland / Hyprland
-ENV XDG_RUNTIME_DIR=/tmp/runtime-clouduser
-ENV WLR_BACKENDS=headless
-ENV WLR_LIBINPUT_NO_DEVICES=1
-ENV WLR_RENDERER=gles2
-ENV XDG_CURRENT_DESKTOP=Hyprland
-ENV XDG_SESSION_TYPE=wayland
-ENV XDG_SESSION_DESKTOP=Hyprland
-
-USER $USER
-WORKDIR /home/$USER
-
-# Setup default shell configuration
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended 2>/dev/null || true
-
-EXPOSE 5900 6080 4713 22
-
-CMD ["/bin/zsh"]
+CMD ["/bin/bash"]
