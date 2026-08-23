@@ -48,6 +48,8 @@ if [ -z "$CODESPACE_NAME" ]; then
         if [ -n "$CS_LIST" ]; then
             CODESPACE_NAME=$(echo "$CS_LIST" | head -n 1)
             echo "🎯 Auto-selected Codespace: $CODESPACE_NAME"
+        else
+            echo "ℹ️  Tip: To allow automatic Codespace discovery, run: gh auth refresh -s codespace"
         fi
     fi
 fi
@@ -59,20 +61,20 @@ if [ -n "$CODESPACE_NAME" ]; then
     TUNNEL_PID=$!
     sleep 2
 else
-    echo "💡 Using direct localhost:5901 (or active port forward)."
+    echo "💡 Connecting to localhost::5901..."
 fi
 
 # 4. Stream Cloud Desktop to Termux:X11
 echo "🚀 [3/3] Streaming Cloud Desktop into Termux:X11..."
 if command -v vncviewer >/dev/null 2>&1; then
     DISPLAY=:0 vncviewer \
-        -FullScreen=1 \
+        -FullScreen \
         -ViewOnly=0 \
         -PreferredEncoding=ZRLE \
-        -AutoPass=1 \
-        localhost:5901 || true
+        -SecurityTypes=None \
+        localhost::5901 || true
 else
-    echo "⚠️  vncviewer not found. Please install tigervnc: pkg install tigervnc"
+    echo "⚠️  vncviewer not found. Please install: pkg install tigervnc-viewer"
 fi
 
 # Cleanup on exit
