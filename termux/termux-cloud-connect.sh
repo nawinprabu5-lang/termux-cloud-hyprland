@@ -12,7 +12,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # 1. Check Dependencies
 MISSING_PKGS=""
 command -v termux-x11 >/dev/null 2>&1 || MISSING_PKGS="$MISSING_PKGS termux-x11-nightly"
-command -v vncviewer >/dev/null 2>&1 || MISSING_PKGS="$MISSING_PKGS tigervnc"
+command -v vncviewer >/dev/null 2>&1 || MISSING_PKGS="$MISSING_PKGS tigervnc-viewer"
 command -v gh >/dev/null 2>&1 || MISSING_PKGS="$MISSING_PKGS gh"
 command -v ssh >/dev/null 2>&1 || MISSING_PKGS="$MISSING_PKGS openssh"
 
