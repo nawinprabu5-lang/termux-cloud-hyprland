@@ -26,7 +26,7 @@ echo "📱 [1/3] Initializing Termux:X11 Display..."
 export XDG_RUNTIME_DIR="${TMPDIR:-/data/data/com.termux/files/usr/tmp}"
 export DISPLAY=:0
 
-if ! pgrep -f "termux-x11 :0" >/dev/null 2>&1; then
+if ! pgrep -f "termux-x11.*:0" >/dev/null 2>&1; then
     termux-x11 :0 &
     sleep 1.5
 fi
@@ -35,38 +35,57 @@ fi
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity 2>/dev/null || true
 sleep 0.5
 
-# 3. Connection Setup (GitHub Codespaces or Remote SSH)
+# 3. Connection & Tunnel Setup
 echo "☁️  [2/3] Establishing Secure Cloud Tunnel..."
 
 CODESPACE_NAME="$1"
 
-# If no codespace provided as argument, check via gh CLI
-if [ -z "$CODESPACE_NAME" ]; then
-    if command -v gh >/dev/null 2>&1; then
+# Check if port 5901 is already forwarded/listening
+check_port() {
+    (echo > /dev/tcp/127.0.0.1/5901) >/dev/null 2>&1
+}
+
+if ! check_port; then
+    # Try automatic codespace discovery
+    if [ -z "$CODESPACE_NAME" ] && command -v gh >/dev/null 2>&1; then
         echo "🔍 Discovering active GitHub Codespaces..."
         CS_LIST=$(gh cs list --json name,displayName,state --jq '.[] | select(.state=="Available") | .name' 2>/dev/null || true)
         if [ -n "$CS_LIST" ]; then
             CODESPACE_NAME=$(echo "$CS_LIST" | head -n 1)
-            echo "🎯 Auto-selected Codespace: $CODESPACE_NAME"
-        else
-            echo "ℹ️  Tip: To allow automatic Codespace discovery, run: gh auth refresh -s codespace"
+            echo "🎯 Found Codespace: $CODESPACE_NAME"
         fi
+    fi
+
+    # If Codespace is specified or found, create SSH tunnel
+    if [ -n "$CODESPACE_NAME" ]; then
+        echo "🔗 Creating port forward tunnel (5901 & 4713) to: $CODESPACE_NAME..."
+        pkill -f "gh cs ssh.*5901" 2>/dev/null || true
+        gh cs ssh -c "$CODESPACE_NAME" -- -N -L 5901:localhost:5901 -L 4713:localhost:4713 &
+        TUNNEL_PID=$!
+        
+        # Wait up to 10 seconds for tunnel to become active
+        echo "⏳ Waiting for cloud tunnel connection..."
+        for i in {1..20}; do
+            if check_port; then
+                echo "✅ Secure tunnel established on localhost:5901"
+                break
+            fi
+            sleep 0.5
+        done
+    else
+        echo "⚠️  No active tunnel detected on localhost:5901."
+        echo ""
+        echo "👉 Option A (Automatic): Grant Codespace access to gh by running:"
+        echo "   gh auth refresh -h github.com -s codespace"
+        echo ""
+        echo "👉 Option B (Manual): In your Codespace web tab, go to 'Ports' tab and click port 6080"
+        echo ""
     fi
 fi
 
-if [ -n "$CODESPACE_NAME" ]; then
-    echo "🔗 Creating port forward tunnel (5901 & 4713) to: $CODESPACE_NAME..."
-    pkill -f "gh cs ssh.*5901" 2>/dev/null || true
-    gh cs ssh -c "$CODESPACE_NAME" -- -N -L 5901:localhost:5901 -L 4713:localhost:4713 &
-    TUNNEL_PID=$!
-    sleep 2
-else
-    echo "💡 Connecting to localhost::5901..."
-fi
-
 # 4. Stream Cloud Desktop to Termux:X11
-echo "🚀 [3/3] Streaming Cloud Desktop into Termux:X11..."
-if command -v vncviewer >/dev/null 2>&1; then
+if check_port; then
+    echo "🚀 [3/3] Streaming Cloud Desktop into Termux:X11..."
     DISPLAY=:0 vncviewer \
         -FullScreen \
         -ViewOnly=0 \
@@ -74,7 +93,8 @@ if command -v vncviewer >/dev/null 2>&1; then
         -SecurityTypes=None \
         localhost::5901 || true
 else
-    echo "⚠️  vncviewer not found. Please install: pkg install tigervnc-viewer"
+    echo "❌ Cannot connect: Cloud tunnel on port 5901 is not active yet."
+    echo "💡 Please authorize gh with 'gh auth refresh -h github.com -s codespace' and retry."
 fi
 
 # Cleanup on exit
