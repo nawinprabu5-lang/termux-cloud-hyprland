@@ -19,8 +19,7 @@
       "onAutoForward": "silent"
     }
   },
-  "postCreateCommand": "bash scripts/install-configs.sh",
-  "postStartCommand": "nohup bash scripts/start-cloud-desktop.sh > /tmp/start_desktop.log 2>&1 &",
+  "postAttachCommand": "bash /usr/local/share/desktop-init.sh",
   "customizations": {
     "vscode": {
       "settings": {
