@@ -1,0 +1,61 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 32,
+    "spacing": 8,
+    "margin-top": 6,
+    "margin-left": 12,
+    "margin-right": 12,
+    "modules-left": [
+        "hyprland/workspaces",
+        "hyprland/window"
+    ],
+    "modules-center": [
+        "clock"
+    ],
+    "modules-right": [
+        "cpu",
+        "memory",
+        "pulseaudio",
+        "custom/cloud",
+        "custom/power"
+    ],
+    "hyprland/workspaces": {
+        "format": "{id}",
+        "on-click": "activate",
+        "all-outputs": true
+    },
+    "hyprland/window": {
+        "format": "{title}",
+        "max-length": 40
+    },
+    "clock": {
+        "format": "  {:%I:%M %p  ·    %a, %b %d}",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+    },
+    "cpu": {
+        "format": "  {usage}%",
+        "interval": 2
+    },
+    "memory": {
+        "format": "  {percentage}% ({used:0.1f}G)",
+        "interval": 2
+    },
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-muted": "󰝟 Muted",
+        "format-icons": {
+            "default": ["", "", ""]
+        },
+        "on-click": "pavucontrol"
+    },
+    "custom/cloud": {
+        "format": "☁️ Codespace",
+        "tooltip": "GitHub Cloud Desktop Active"
+    },
+    "custom/power": {
+        "format": "",
+        "tooltip": "Exit Hyprland",
+        "on-click": "hyprctl dispatch exit"
+    }
+}
